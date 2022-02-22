@@ -1,24 +1,55 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import AsyncSelect from 'react-select/async'
+import { Analysis } from './Analysis'
+import { GroceryDb } from '../grocery-db'
 
 export class App extends React.Component<any, any> {
 
     VALID_UNITS: Array<string> = ['kg', 'g', 'lb']
     API_KEY: string = 'XJhL3a6dKg1b8xMzv5KA9GcuLLxmjeXFLfehyGbO'
+    RDI = {
+        calories: 2000,
+        fat: 78,
+        protein: 50,
+        carbohydrate: 275,
+    }
+
+    db: GroceryDb
 
     constructor(props) {
         super(props);
+        this.db = new GroceryDb()
         this.state = {
-            rows: [
-                this.defaultRow(),
-                this.defaultRow(),
-                this.defaultRow(),
-            ]
+            trip: {
+                items: [this.defaultItem()]
+            }
         }
     }
 
-    defaultRow() {
+    async componentDidMount() {
+        let trip = await this.db.getTrip(1)
+        if (trip) {
+            this.setState({trip: trip})
+        }
+    }
+
+    updateTrip(trip) {
+        if (this.allValid(trip.items)) {
+            trip.items.push(this.defaultItem())
+        }
+        this.db.putTrip(trip).then(id => {
+            trip.id = id
+            this.setState({trip})
+        })
+    }
+
+    allValid(items) {
+        let invalid = items.find(item => item.food === undefined || item.amount === undefined)
+        return invalid === undefined
+    }
+
+    defaultItem() {
         return {amount: '', cost: ''}
     }
 
@@ -35,47 +66,41 @@ export class App extends React.Component<any, any> {
                         </tr>
                     </thead>
                     <tbody>
-                        {this.state.rows.map(this.renderRow.bind(this))}
+                        {this.state.trip.items.map(this.renderItem.bind(this))}
                     </tbody>
                 </table>
                 <button onClick={this.analyze.bind(this)}>Analyze</button>
-                <table>
-                    <tbody>
-                        <tr>
-                            <td>Total Calories</td>
-                            <td>{this.state.analysis && this.state.analysis.calories}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                {this.state.analysis ? <Analysis {...this.state.analysis}/> : ''}
             </div>
         )
     }
 
-    renderRow(row, i) {
+    renderItem(item, i) {
+        let trip = this.state.trip
         return (
             <tr key={i}>
                 <td><AsyncSelect
                     loadOptions={this.searchFoods.bind(this)}
-                    value={row.food}
+                    value={item.food}
                     onChange={(food) => {
-                        this.state.rows[i].food = food
-                        this.setState(this.state)
+                        item.food = food
+                        this.updateTrip(trip)
                     }}
                 /></td>
                 <td><input
                     type="text"
-                    value={row.amount}
+                    value={item.amount}
                     onChange={(e) => {
-                        this.state.rows[i].amount = e.target.value
-                        this.setState(this.state)
+                        item.amount = e.target.value
+                        this.updateTrip(trip)
                     }}
                 /></td>
                 <td><input
                     type="number"
-                    value={row.cost}
+                    value={item.cost}
                     onChange={(e) => {
-                        this.state.rows[i].cost = e.target.value
-                        this.setState(this.state)
+                        item.cost = e.target.value
+                        this.updateTrip(trip)
                     }}
                 /></td>
             </tr>
@@ -105,22 +130,29 @@ export class App extends React.Component<any, any> {
     }
 
     analyze() {
-        // Extract data and clean from state
-        // Fetch nutrition info (add cache later)
-        // Sum up info
-        let rows = this.state.rows
-        rows = rows.map(row => {
+        let items = this.state.trip.items
+        items = items.map(row => {
             return {...row, amount: this.parseAmount(row.amount)}
         })
-        rows = rows.filter(row => {
+        items = items.filter(row => {
             return row.food !== undefined && row.amount !== undefined
         })
-        let promises = rows.map(async (row) => {
+        let promises = items.map(async (row) => {
             return await this.lookupNutrition(row.food.value, row.amount)
         })
         Promise.all(promises).then((nutrition) => {
-            let totalCalories = nutrition.reduce((sum, v: any) => sum + v.calories, 0)
-            this.setState({analysis: {calories: totalCalories}})
+            let totalCalories = nutrition.reduce<number>((sum, v: any) => sum + v.calories, 0)
+            let totalCarbohydrate = nutrition.reduce<number>((sum, v: any) => sum + v.carbohydrate, 0)
+            let totalProtein = nutrition.reduce<number>((sum, v: any) => sum + v.protein, 0)
+            let totalFat = nutrition.reduce<number>((sum, v: any) => sum + v.fat, 0)
+            let daysOfFood = totalCalories / this.RDI.calories
+            this.setState({analysis: {
+                calories: totalCalories,
+                daysOfFood:  daysOfFood,
+                carbohydrate: totalCarbohydrate / daysOfFood / this.RDI.carbohydrate,
+                protein: totalProtein / daysOfFood / this.RDI.protein,
+                fat: totalFat / daysOfFood / this.RDI.fat,
+            }})
         })
     }
 
@@ -129,8 +161,19 @@ export class App extends React.Component<any, any> {
         return fetch(url)
             .then(response => response.json())
             .then(data => {
+                console.log(data)
                 let energy = data.foodNutrients.find(nutrient => nutrient.nutrient.name === 'Energy')
-                return {calories: this.scale(amount, energy.amount)}
+                let carbohydrate = data.foodNutrients.find(
+                    nutrient => nutrient.nutrient.name === 'Carbohydrate, by difference'
+                )
+                let protein = data.foodNutrients.find(nutrient => nutrient.nutrient.name === 'Protein')
+                let fat = data.foodNutrients.find(nutrient => nutrient.nutrient.name === 'Total lipid (fat)')
+                return {
+                    calories: this.scale(amount, energy.amount),
+                    carbohydrate: this.scale(amount, carbohydrate.amount),
+                    protein: this.scale(amount, protein.amount),
+                    fat: this.scale(amount, fat.amount),
+                }
             })
     }
 
