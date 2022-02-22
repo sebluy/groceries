@@ -4,6 +4,9 @@ import AsyncSelect from 'react-select/async'
 
 export class App extends React.Component<any, any> {
 
+    VALID_UNITS: Array<string> = ['kg', 'g', 'lb']
+    API_KEY: string = 'XJhL3a6dKg1b8xMzv5KA9GcuLLxmjeXFLfehyGbO'
+
     constructor(props) {
         super(props);
         this.state = {
@@ -35,6 +38,15 @@ export class App extends React.Component<any, any> {
                         {this.state.rows.map(this.renderRow.bind(this))}
                     </tbody>
                 </table>
+                <button onClick={this.analyze.bind(this)}>Analyze</button>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>Total Calories</td>
+                            <td>{this.state.analysis && this.state.analysis.calories}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         )
     }
@@ -43,7 +55,7 @@ export class App extends React.Component<any, any> {
         return (
             <tr key={i}>
                 <td><AsyncSelect
-                    loadOptions={this.loadOptions.bind(this)}
+                    loadOptions={this.searchFoods.bind(this)}
                     value={row.food}
                     onChange={(food) => {
                         this.state.rows[i].food = food
@@ -78,11 +90,10 @@ export class App extends React.Component<any, any> {
         })
     }
 
-    loadOptions(input: string) {
+    searchFoods(input: string) {
         // TODO: Do I need to rate limit this?
         // TODO: Move apiKey into some kind of config manager
-        let apiKey = 'XJhL3a6dKg1b8xMzv5KA9GcuLLxmjeXFLfehyGbO'
-        let url = `https://api.nal.usda.gov/fdc/v1/foods/list?api_key=${apiKey}`
+        let url = `https://api.nal.usda.gov/fdc/v1/foods/list?api_key=${this.API_KEY}`
         return this.post(url, {query: input, pageSize: 10})
             .then(response => response.json())
             .then(data => {
@@ -91,6 +102,56 @@ export class App extends React.Component<any, any> {
                     return {value: item.fdcId, label: item.description}
                 })
             })
+    }
+
+    analyze() {
+        // Extract data and clean from state
+        // Fetch nutrition info (add cache later)
+        // Sum up info
+        let rows = this.state.rows
+        rows = rows.map(row => {
+            return {...row, amount: this.parseAmount(row.amount)}
+        })
+        rows = rows.filter(row => {
+            return row.food !== undefined && row.amount !== undefined
+        })
+        let promises = rows.map(async (row) => {
+            return await this.lookupNutrition(row.food.value, row.amount)
+        })
+        Promise.all(promises).then((nutrition) => {
+            let totalCalories = nutrition.reduce((sum, v: any) => sum + v.calories, 0)
+            this.setState({analysis: {calories: totalCalories}})
+        })
+    }
+
+    lookupNutrition(foodId, amount) {
+        let url = `https://api.nal.usda.gov/fdc/v1/food/${foodId}?api_key=${this.API_KEY}`
+        return fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let energy = data.foodNutrients.find(nutrient => nutrient.nutrient.name === 'Energy')
+                return {calories: this.scale(amount, energy.amount)}
+            })
+    }
+
+    scale(amount, per100g) {
+        let scaled = amount.number * per100g
+        if (amount.unit === 'kg') {
+            return scaled * 10
+        } else if (amount.unit === 'lb') {
+            return scaled * 4.5359
+        } else {
+            return scaled / 100.0
+        }
+    }
+
+    parseAmount(amount: string) {
+        let parts = amount.split(' ')
+        if (parts.length !== 2) return undefined
+        let number = parseFloat(parts[0])
+        let unit = parts[1]
+        if (this.VALID_UNITS.indexOf(unit) === -1) return undefined
+        return {number, unit}
     }
 
 }
