@@ -1,0 +1,17 @@
+#main {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#main h1 {
+    text-align: center;
+}
+
+#main table {
+    width: 100%;
+}
+
+#main input {
+    width: 100%;
+}
