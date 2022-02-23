@@ -3,10 +3,11 @@ import * as ReactDOM from 'react-dom'
 import AsyncSelect from 'react-select/async'
 import { Analysis } from './Analysis'
 import { GroceryDb } from '../grocery-db'
+import { Item } from '../item'
+import { Trip } from '../trip'
 
 export class App extends React.Component<any, any> {
 
-    VALID_UNITS: Array<string> = ['kg', 'g', 'lb']
     API_KEY: string = 'XJhL3a6dKg1b8xMzv5KA9GcuLLxmjeXFLfehyGbO'
     RDI = {
         calories: 2000,
@@ -21,9 +22,7 @@ export class App extends React.Component<any, any> {
         super(props);
         this.db = new GroceryDb()
         this.state = {
-            trip: {
-                items: [this.defaultItem()]
-            }
+            trip: new Trip()
         }
     }
 
@@ -34,23 +33,14 @@ export class App extends React.Component<any, any> {
         }
     }
 
-    updateTrip(trip) {
-        if (this.allValid(trip.items)) {
-            trip.items.push(this.defaultItem())
+    updateTrip(trip: Trip) {
+        if (trip.allValid()) {
+            trip.items.push(new Item)
         }
         this.db.putTrip(trip).then(id => {
             trip.id = id
             this.setState({trip})
         })
-    }
-
-    allValid(items) {
-        let invalid = items.find(item => item.food === undefined || item.amount === undefined)
-        return invalid === undefined
-    }
-
-    defaultItem() {
-        return {amount: '', cost: ''}
     }
 
     render() {
@@ -75,13 +65,17 @@ export class App extends React.Component<any, any> {
         )
     }
 
-    renderItem(item, i) {
+    renderItem(item: Item, i) {
         let trip = this.state.trip
+        let errors =  !item.blank() && !item.valid() ? item.getErrors() : {}
         return (
             <tr key={i}>
                 <td><AsyncSelect
+                    isClearable={true}
                     loadOptions={this.searchFoods.bind(this)}
                     value={item.food}
+                    className={errors.food ? 'error' : ''}
+                    classNamePrefix="react-select"
                     onChange={(food) => {
                         item.food = food
                         this.updateTrip(trip)
@@ -89,15 +83,17 @@ export class App extends React.Component<any, any> {
                 /></td>
                 <td><input
                     type="text"
-                    value={item.amount}
+                    value={item.amount.raw}
+                    className={errors.amount ? 'error' : ''}
                     onChange={(e) => {
-                        item.amount = e.target.value
+                        item.setAmount(e.target.value)
                         this.updateTrip(trip)
                     }}
                 /></td>
                 <td><input
                     type="number"
                     value={item.cost}
+                    className={errors.cost ? 'error' : ''}
                     onChange={(e) => {
                         item.cost = e.target.value
                         this.updateTrip(trip)
@@ -131,12 +127,7 @@ export class App extends React.Component<any, any> {
 
     analyze() {
         let items = this.state.trip.items
-        items = items.map(row => {
-            return {...row, amount: this.parseAmount(row.amount)}
-        })
-        items = items.filter(row => {
-            return row.food !== undefined && row.amount !== undefined
-        })
+        items = items.filter(item => item.valid())
         let promises = items.map(async (row) => {
             return await this.lookupNutrition(row.food.value, row.amount)
         })
@@ -179,22 +170,14 @@ export class App extends React.Component<any, any> {
 
     scale(amount, per100g) {
         let scaled = amount.number * per100g
-        if (amount.unit === 'kg') {
+        let unit = amount.unit
+        if (unit === 'kg' || unit === 'l') {
             return scaled * 10
-        } else if (amount.unit === 'lb') {
+        } else if (unit === 'lb') {
             return scaled * 4.5359
-        } else {
+        } else if (unit === 'g' || unit === 'ml') {
             return scaled / 100.0
         }
-    }
-
-    parseAmount(amount: string) {
-        let parts = amount.split(' ')
-        if (parts.length !== 2) return undefined
-        let number = parseFloat(parts[0])
-        let unit = parts[1]
-        if (this.VALID_UNITS.indexOf(unit) === -1) return undefined
-        return {number, unit}
     }
 
 }

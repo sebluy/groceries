@@ -15,3 +15,11 @@
 #main input {
     width: 100%;
 }
+
+.error {
+    border-color: red;
+}
+
+.error .react-select__control {
+    border-color: red;
+}
