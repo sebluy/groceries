@@ -23,3 +23,7 @@
 .error .react-select__control {
     border-color: red;
 }
+
+td {
+    text-align: right;
+}

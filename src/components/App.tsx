@@ -5,16 +5,11 @@ import { Analysis } from './Analysis'
 import { GroceryDb } from '../grocery-db'
 import { Item } from '../item'
 import { Trip } from '../trip'
+import { Food } from '../food'
 
 export class App extends React.Component<any, any> {
 
     API_KEY: string = 'XJhL3a6dKg1b8xMzv5KA9GcuLLxmjeXFLfehyGbO'
-    RDI = {
-        calories: 2000,
-        fat: 78,
-        protein: 50,
-        carbohydrate: 275,
-    }
 
     db: GroceryDb
 
@@ -129,55 +124,75 @@ export class App extends React.Component<any, any> {
         let items = this.state.trip.items
         items = items.filter(item => item.valid())
         let promises = items.map(async (row) => {
-            return await this.lookupNutrition(row.food.value, row.amount)
+            let food = await this.lookupFood(row.food.value)
+            return food.scale(row.amount)
         })
-        Promise.all(promises).then((nutrition) => {
-            let totalCalories = nutrition.reduce<number>((sum, v: any) => sum + v.calories, 0)
-            let totalCarbohydrate = nutrition.reduce<number>((sum, v: any) => sum + v.carbohydrate, 0)
-            let totalProtein = nutrition.reduce<number>((sum, v: any) => sum + v.protein, 0)
-            let totalFat = nutrition.reduce<number>((sum, v: any) => sum + v.fat, 0)
-            let daysOfFood = totalCalories / this.RDI.calories
-            this.setState({analysis: {
-                calories: totalCalories,
-                daysOfFood:  daysOfFood,
-                carbohydrate: totalCarbohydrate / daysOfFood / this.RDI.carbohydrate,
-                protein: totalProtein / daysOfFood / this.RDI.protein,
-                fat: totalFat / daysOfFood / this.RDI.fat,
-            }})
+        Promise.all(promises).then(foods => {
+            this.setState({analysis: this.generateAnalysis(foods as Array<Food>)})
         })
     }
 
-    lookupNutrition(foodId, amount) {
-        let url = `https://api.nal.usda.gov/fdc/v1/food/${foodId}?api_key=${this.API_KEY}`
+    generateAnalysis(foods: Array<Food>) {
+        let raw = []
+        let rdi = []
+        let rdiPerDay = []
+        let rawTotal = Food.empty('Total')
+        let rdiTotal = Food.empty('Total')
+        let rdiPerDayTotal = Food.empty('Total')
+        foods.forEach(food => {
+            raw.push(food)
+            rawTotal = rawTotal.add(food)
+
+            let foodRDI = food.toRDI()
+            rdi.push(foodRDI)
+            rdiTotal = rdiTotal.add(foodRDI)
+        })
+
+        foods.forEach(food => {
+            let foodRDI = food.toRDI()
+            let foodRDIPerDay = foodRDI.scaleByFactor(1 / rdiTotal.calories)
+            rdiPerDay.push(foodRDIPerDay)
+            rdiPerDayTotal = rdiPerDayTotal.add(foodRDIPerDay)
+        })
+        raw.push(rawTotal)
+        rdi.push(rdiTotal)
+        rdiPerDay.push(rdiPerDayTotal)
+
+        return {raw, rdi, rdiPerDay}
+    }
+
+    async lookupFood(id, useCache = true): Promise<Food> {
+        let food
+        if (useCache) {
+            food = await this.db.getFood(id)
+            if (food) return food
+        }
+        food = await this.fetchFood(id)
+        await this.db.putFood(food)
+        return food
+    }
+
+    fetchFood(id): Promise<Food> {
+        let url = `https://api.nal.usda.gov/fdc/v1/food/${id}?api_key=${this.API_KEY}`
         return fetch(url)
             .then(response => response.json())
             .then(data => {
                 console.log(data)
-                let energy = data.foodNutrients.find(nutrient => nutrient.nutrient.name === 'Energy')
-                let carbohydrate = data.foodNutrients.find(
-                    nutrient => nutrient.nutrient.name === 'Carbohydrate, by difference'
-                )
-                let protein = data.foodNutrients.find(nutrient => nutrient.nutrient.name === 'Protein')
-                let fat = data.foodNutrients.find(nutrient => nutrient.nutrient.name === 'Total lipid (fat)')
-                return {
-                    calories: this.scale(amount, energy.amount),
-                    carbohydrate: this.scale(amount, carbohydrate.amount),
-                    protein: this.scale(amount, protein.amount),
-                    fat: this.scale(amount, fat.amount),
-                }
+                let nutrients = {}
+                data.foodNutrients.forEach(nutrient => {
+                    if (nutrient.nutrient.name === 'Energy' && nutrient.nutrient.unitName === 'kJ') return
+                    nutrients[nutrient.nutrient.name] = nutrient.amount
+                })
+                return new Food({
+                    id,
+                    description: data.description,
+                    amount: {raw: '100 g', number: 100, unit: 'g'},
+                    calories: nutrients['Energy'] || 0,
+                    carbohydrate: nutrients['Carbohydrate, by difference'] || 0,
+                    protein: nutrients['Protein'] || 0,
+                    fat: nutrients['Total lipid (fat)'] || 0,
+                })
             })
-    }
-
-    scale(amount, per100g) {
-        let scaled = amount.number * per100g
-        let unit = amount.unit
-        if (unit === 'kg' || unit === 'l') {
-            return scaled * 10
-        } else if (unit === 'lb') {
-            return scaled * 4.5359
-        } else if (unit === 'g' || unit === 'ml') {
-            return scaled / 100.0
-        }
     }
 
 }
