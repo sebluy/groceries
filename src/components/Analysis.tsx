@@ -6,8 +6,11 @@ export class Analysis extends React.Component<any, any> {
     render() {
         return (
             <div>
+                <h2>Raw</h2>
                 {this.renderTable(this.props.raw)}
+                <h2>RDI</h2>
                 {this.renderTable(this.props.rdi)}
+                <h2>RDI/Day</h2>
                 {this.renderTable(this.props.rdiPerDay)}
             </div>
         )
@@ -16,18 +19,14 @@ export class Analysis extends React.Component<any, any> {
     renderTable(foods: Array<Food>) {
         return (
             <table>
-                <thead>
-                    <tr>
-                        <td>Food</td>
-                        <td>Carbohydrate</td>
-                        <td>Protein</td>
-                        <td>Fat</td>
-                        <td>Calories</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    {foods.map(food => this.renderFood(food))}
-                </tbody>
+                <tr>
+                    <th>Food</th>
+                    <th>Carbohydrate</th>
+                    <th>Protein</th>
+                    <th>Fat</th>
+                    <th>Calories</th>
+                </tr>
+                {foods.map(food => this.renderFood(food))}
             </table>
         )
     }

@@ -43,16 +43,12 @@ export class App extends React.Component<any, any> {
             <div id="main">
                 <h1>Groceries!</h1>
                 <table>
-                    <thead>
-                        <tr>
-                            <td>Food Name</td>
-                            <td>Amount</td>
-                            <td>Cost</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.state.trip.items.map(this.renderItem.bind(this))}
-                    </tbody>
+                    <tr>
+                        <th>Food Name</th>
+                        <th>Amount</th>
+                        <th>Cost</th>
+                    </tr>
+                    {this.state.trip.items.map(this.renderItem.bind(this))}
                 </table>
                 <button onClick={this.analyze.bind(this)}>Analyze</button>
                 {this.state.analysis ? <Analysis {...this.state.analysis}/> : ''}
