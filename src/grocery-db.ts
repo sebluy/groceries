@@ -17,10 +17,10 @@ export class GroceryDb {
         this.db.foods.mapToClass(Food)
     }
 
-    getTrip(id: number): Promise<Trip> {
-        return this.db.trips.get(id).then(trip => {
-            trip.items = trip.items.map(item => Item.fromObject(item))
-            return trip
+    getTrips(): Promise<Array<Trip>> {
+        return this.db.trips.toArray().then(trips => {
+            trips.forEach(trip => trip.mapItemsToClass())
+            return trips
         })
     }
 

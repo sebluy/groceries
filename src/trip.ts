@@ -15,4 +15,8 @@ export class Trip {
         return invalid === undefined
     }
 
+    mapItemsToClass() {
+        this.items = this.items.map(item => Item.fromObject(item))
+    }
+
 }
