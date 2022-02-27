@@ -24,8 +24,24 @@ export class Analysis {
         let analysis = new Analysis(db)
         let ps = trips.map(trip => analysis.extractFoods(trip))
         let tripFoods = await Promise.all(ps)
-        let foods = tripFoods.reduce((f1, f2) => f1.concat(f2))
+        let foods = analysis.mergeFoods(tripFoods)
         return analysis.generateAnalysis(foods)
+    }
+
+    mergeFoods(tripFoods: Array<Array<Food>>): Array<Food> {
+        let foodMap = new Map<number, Food>()
+        tripFoods.forEach(foods => {
+            foods.forEach(food => {
+                if (foodMap.has(food.id)) {
+                    let existing = foodMap.get(food.id)
+                    let merged = existing.add(food)
+                    foodMap.set(food.id, merged)
+                } else {
+                    foodMap.set(food.id, food)
+                }
+            })
+        })
+        return Array.from(foodMap.values())
     }
 
     async extractFoods(trip: Trip): Promise<Array<Food>> {

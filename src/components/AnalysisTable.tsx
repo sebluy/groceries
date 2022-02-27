@@ -22,6 +22,7 @@ export class AnalysisTable extends React.Component<any, any> {
                 <thead>
                     <tr>
                         <th>Food</th>
+                        <th>Amount</th>
                         <th>Carbohydrate</th>
                         <th>Protein</th>
                         <th>Fat</th>
@@ -40,6 +41,7 @@ export class AnalysisTable extends React.Component<any, any> {
         return (
             <tr key={food.description}>
                 <td>{food.description}</td>
+                <td>{food.amount.raw}</td>
                 <td>{ff(food.carbohydrate)}</td>
                 <td>{ff(food.protein)}</td>
                 <td>{ff(food.fat)}</td>

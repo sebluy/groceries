@@ -23,6 +23,7 @@ export class Food {
     static empty(description) {
         return new Food({
             description,
+            amount: {raw: '0 kg', number: 0, unit: 'kg'},
             calories: 0,
             carbohydrate: 0,
             protein: 0,
@@ -31,10 +32,16 @@ export class Food {
     }
 
     add(f2: Food) {
+        let uFactor = this.unitFactor(this.amount.unit, f2.amount.unit)
+        let amount: any = {
+            unit: this.amount.unit,
+            number: this.amount.number + uFactor * f2.amount.number
+        }
+        amount.raw = (Math.round(amount.number * 100000) / 100000) + ' ' + amount.unit
         return new Food({
             id: this.id,
             description: this.description,
-            amount: this.amount,
+            amount: amount,
             calories: this.calories + f2.calories,
             carbohydrate: this.carbohydrate + f2.carbohydrate,
             fat: this.fat + f2.fat,
@@ -82,14 +89,13 @@ export class Food {
     }
 
     unitFactor(u1, u2) {
-        if (u1 !== 'g') throw new Error('Unknown conversion')
-        if (u2 === 'kg' || u2 === 'l') {
-            return 1000.0
-        } else if (u2 === 'lb') {
-            return 453.59
-        } else if (u2 === 'g' || u2 === 'ml') {
-            return 1.0
-        }
+        if (u1 === 'ml') u1 = 'g'
+        if (u2 === 'ml') u2 = 'g'
+        if (u1 === 'l') u1 = 'kg'
+        if (u2 === 'l') u2 = 'kg'
+        if (u1 === u2) return 1.0
+        if (u1 === 'g' && u2 === 'kg') return 1000.0
+        if (u1 === 'kg' && u2 === 'g') return 0.001
     }
 
 }
