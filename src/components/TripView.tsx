@@ -21,6 +21,7 @@ export class TripView extends React.Component<any, any> {
         }
         this.props.db.putTrip(trip).then(id => {
             trip.id = id
+            this.forceUpdate()
         })
     }
 
@@ -29,12 +30,16 @@ export class TripView extends React.Component<any, any> {
             <div id="main">
                 <h1>Groceries!</h1>
                 <table>
-                    <tr>
-                        <th>Food Name</th>
-                        <th>Amount</th>
-                        <th>Cost</th>
-                    </tr>
-                    {this.props.trip.items.map(this.renderItem.bind(this))}
+                    <thead>
+                        <tr>
+                            <th>Food Name</th>
+                            <th>Amount</th>
+                            <th>Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {this.props.trip.items.map(this.renderItem.bind(this))}
+                    </tbody>
                 </table>
                 <button onClick={this.analyze.bind(this)}>Analyze</button>
                 {this.state.analysis ? <Analysis {...this.state.analysis}/> : ''}

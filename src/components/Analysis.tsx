@@ -19,14 +19,18 @@ export class Analysis extends React.Component<any, any> {
     renderTable(foods: Array<Food>) {
         return (
             <table>
-                <tr>
-                    <th>Food</th>
-                    <th>Carbohydrate</th>
-                    <th>Protein</th>
-                    <th>Fat</th>
-                    <th>Calories</th>
-                </tr>
-                {foods.map(food => this.renderFood(food))}
+                <thead>
+                    <tr>
+                        <th>Food</th>
+                        <th>Carbohydrate</th>
+                        <th>Protein</th>
+                        <th>Fat</th>
+                        <th>Calories</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {foods.map(food => this.renderFood(food))}
+                </tbody>
             </table>
         )
     }
