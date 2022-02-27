@@ -26,14 +26,16 @@ export class Item {
     }
 
     setAmount(raw: string) {
-        this.amount = {raw}
+        this.amount = this.parseAmount(raw)
+    }
+
+    parseAmount(raw: string) {
         let parts = raw.split(' ')
-        if (parts.length !== 2) return undefined
+        if (parts.length !== 2) return {raw}
         let number = parseFloat(parts[0])
         let unit = parts[1]
-        if (Item.VALID_UNITS.indexOf(unit) === -1) return undefined
-        this.amount.number = number
-        this.amount.unit = unit
+        if (Item.VALID_UNITS.indexOf(unit) === -1) return {raw}
+        return {raw, number, unit}
     }
 
     getErrors() {

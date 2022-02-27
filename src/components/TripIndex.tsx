@@ -31,7 +31,7 @@ export class TripIndex extends React.Component<any, any> {
                         {this.state.trips.map((trip: Trip) => (
                             <tr key={trip.id}>
                                 <td>{trip.id}</td>
-                                <td>{trip.date && trip.date.toDateString()}</td>
+                                <td>{trip.date.value && trip.date.value.toDateString()}</td>
                                 <td>
                                     <button onClick={() => this.props.viewTrip(trip)}>View</button>
                                 </td>

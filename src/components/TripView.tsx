@@ -15,20 +15,32 @@ export class TripView extends React.Component<any, any> {
         this.state = {}
     }
 
-    updateTrip(trip: Trip) {
+    updateTrip() {
+        let trip = this.props.trip
         if (trip.allValid()) {
             trip.items.push(new Item)
         }
+        this.forceUpdate()
         this.props.db.putTrip(trip).then(id => {
             trip.id = id
-            this.forceUpdate()
         })
     }
 
     render() {
+        let errors = this.props.trip.getErrors()
         return (
             <div id="main">
                 <h1>Groceries!</h1>
+                <input
+                    type="text"
+                    placeholder="MM/DD/YYYY"
+                    value={this.props.trip.date.raw}
+                    className={errors.date ? 'error' : ''}
+                    onChange={(e) => {
+                        this.props.trip.setDate(e.target.value)
+                        this.updateTrip()
+                    }}
+                />
                 <table>
                     <thead>
                         <tr>
@@ -48,7 +60,6 @@ export class TripView extends React.Component<any, any> {
     }
 
     renderItem(item: Item, i) {
-        let trip = this.props.trip
         let errors =  !item.blank() && !item.valid() ? item.getErrors() : {}
         return (
             <tr key={i}>
@@ -60,7 +71,7 @@ export class TripView extends React.Component<any, any> {
                     classNamePrefix="react-select"
                     onChange={(food) => {
                         item.food = food
-                        this.updateTrip(trip)
+                        this.updateTrip()
                     }}
                 /></td>
                 <td><input
@@ -69,7 +80,7 @@ export class TripView extends React.Component<any, any> {
                     className={errors.amount ? 'error' : ''}
                     onChange={(e) => {
                         item.setAmount(e.target.value)
-                        this.updateTrip(trip)
+                        this.updateTrip()
                     }}
                 /></td>
                 <td><input
@@ -78,7 +89,7 @@ export class TripView extends React.Component<any, any> {
                     className={errors.cost ? 'error' : ''}
                     onChange={(e) => {
                         item.cost = e.target.value
-                        this.updateTrip(trip)
+                        this.updateTrip()
                     }}
                 /></td>
             </tr>
