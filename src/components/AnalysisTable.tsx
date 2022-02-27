@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Food} from "../food";
 
-export class Analysis extends React.Component<any, any> {
+export class AnalysisTable extends React.Component<any, any> {
 
     render() {
         return (

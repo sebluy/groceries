@@ -1,5 +1,7 @@
 import * as React from 'react'
 import { Trip } from '../trip'
+import { AnalysisTable } from './AnalysisTable'
+import { Analysis } from '../analysis'
 
 export class TripIndex extends React.Component<any, any> {
 
@@ -44,8 +46,18 @@ export class TripIndex extends React.Component<any, any> {
                     onClick={() => this.props.viewTrip(new Trip())}>
                     New Trip
                 </button>
+                <button
+                    onClick={this.analyzeMultiple.bind(this)}>
+                    Analyze Multiple
+                </button>
+                {this.state.analysis ? <AnalysisTable {...this.state.analysis}/> : ''}
             </div>
         )
+    }
+
+    async analyzeMultiple() {
+        let analysis = await Analysis.analyzeTrips(this.props.db, this.state.trips)
+        this.setState({analysis})
     }
 
 }

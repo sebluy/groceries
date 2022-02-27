@@ -1,9 +1,9 @@
 import * as React from 'react'
 import AsyncSelect from 'react-select/async'
-import { Analysis } from './Analysis'
+import { AnalysisTable} from './AnalysisTable'
+import { Analysis } from '../analysis'
 import { Item } from '../item'
 import { Trip } from '../trip'
-import { Food } from '../food'
 
 export class TripView extends React.Component<any, any> {
 
@@ -16,7 +16,7 @@ export class TripView extends React.Component<any, any> {
     }
 
     updateTrip() {
-        let trip = this.props.trip
+        let trip: Trip = this.props.trip
         if (trip.allValid()) {
             trip.items.push(new Item)
         }
@@ -30,6 +30,7 @@ export class TripView extends React.Component<any, any> {
         let errors = this.props.trip.getErrors()
         return (
             <div id="main">
+                <button onClick={this.props.goBack}>Back</button>
                 <h1>Groceries!</h1>
                 <input
                     type="text"
@@ -54,7 +55,7 @@ export class TripView extends React.Component<any, any> {
                     </tbody>
                 </table>
                 <button onClick={this.analyze.bind(this)}>Analyze</button>
-                {this.state.analysis ? <Analysis {...this.state.analysis}/> : ''}
+                {this.state.analysis ? <AnalysisTable {...this.state.analysis}/> : ''}
             </div>
         )
     }
@@ -118,79 +119,9 @@ export class TripView extends React.Component<any, any> {
             })
     }
 
-    analyze() {
-        let items = this.props.trip.items
-        items = items.filter(item => item.valid())
-        let promises = items.map(async (row) => {
-            let food = await this.lookupFood(row.food.value)
-            return food.scale(row.amount)
-        })
-        Promise.all(promises).then(foods => {
-            this.setState({analysis: this.generateAnalysis(foods as Array<Food>)})
-        })
-    }
-
-    generateAnalysis(foods: Array<Food>) {
-        let raw = []
-        let rdi = []
-        let rdiPerDay = []
-        let rawTotal = Food.empty('Total')
-        let rdiTotal = Food.empty('Total')
-        let rdiPerDayTotal = Food.empty('Total')
-        foods.forEach(food => {
-            raw.push(food)
-            rawTotal = rawTotal.add(food)
-
-            let foodRDI = food.toRDI()
-            rdi.push(foodRDI)
-            rdiTotal = rdiTotal.add(foodRDI)
-        })
-
-        foods.forEach(food => {
-            let foodRDI = food.toRDI()
-            let foodRDIPerDay = foodRDI.scaleByFactor(1 / rdiTotal.calories)
-            rdiPerDay.push(foodRDIPerDay)
-            rdiPerDayTotal = rdiPerDayTotal.add(foodRDIPerDay)
-        })
-        raw.push(rawTotal)
-        rdi.push(rdiTotal)
-        rdiPerDay.push(rdiPerDayTotal)
-
-        return {raw, rdi, rdiPerDay}
-    }
-
-    async lookupFood(id, useCache = true): Promise<Food> {
-        let food
-        if (useCache) {
-            food = await this.props.db.getFood(id)
-            if (food) return food
-        }
-        food = await this.fetchFood(id)
-        await this.props.db.putFood(food)
-        return food
-    }
-
-    fetchFood(id): Promise<Food> {
-        let url = `https://api.nal.usda.gov/fdc/v1/food/${id}?api_key=${this.API_KEY}`
-        return fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-                let nutrients = {}
-                data.foodNutrients.forEach(nutrient => {
-                    if (nutrient.nutrient.name === 'Energy' && nutrient.nutrient.unitName === 'kJ') return
-                    nutrients[nutrient.nutrient.name] = nutrient.amount
-                })
-                return new Food({
-                    id,
-                    description: data.description,
-                    amount: {raw: '100 g', number: 100, unit: 'g'},
-                    calories: nutrients['Energy'] || 0,
-                    carbohydrate: nutrients['Carbohydrate, by difference'] || 0,
-                    protein: nutrients['Protein'] || 0,
-                    fat: nutrients['Total lipid (fat)'] || 0,
-                })
-            })
+    async analyze() {
+        let analysis = await Analysis.analyzeTrip(this.props.db, this.props.trip)
+        this.setState({analysis})
     }
 
 }
