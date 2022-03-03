@@ -35,7 +35,15 @@ export class Trip {
     }
 
     static allItems(trips: Array<Trip>): Array<Item> {
-        return trips.reduce((all, trip) => all.concat(trip.items), []).filter((item: Item) => item.valid())
+        let itemMap = new Map<string, Item>()
+        trips.forEach(trip => {
+            trip.items.forEach(item => {
+                if (!item.valid()) return
+                itemMap.set(item.food.label, item)
+            })
+        })
+        return [...itemMap.values()]
+            .sort((i1, i2) => i1.food.label.localeCompare(i2.food.label))
     }
 
 }
