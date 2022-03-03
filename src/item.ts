@@ -45,4 +45,8 @@ export class Item {
         return errors
     }
 
+    clone() {
+        return new Item({...this.food}, {...this.amount}, this.cost)
+    }
+
 }

@@ -34,5 +34,8 @@ export class Trip {
         return errors
     }
 
+    static allItems(trips: Array<Trip>): Array<Item> {
+        return trips.reduce((all, trip) => all.concat(trip.items), []).filter((item: Item) => item.valid())
+    }
 
 }

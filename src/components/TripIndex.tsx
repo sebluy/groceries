@@ -42,8 +42,7 @@ export class TripIndex extends React.Component<any, any> {
                     </tbody>
                 </table>
                 <button
-                    className="new-trip"
-                    onClick={() => this.props.viewTrip(new Trip())}>
+                    onClick={() => this.props.viewNewTrip()}>
                     New Trip
                 </button>
                 <button

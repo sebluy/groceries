@@ -4,6 +4,7 @@ import { Trip } from '../trip'
 import { TripIndex } from './TripIndex'
 import { TripView } from './TripView'
 import { GroceryDb } from '../grocery-db'
+import { NewTripView } from './NewTripView'
 
 /*
  TODO: Add a analysis button on trip index to analyze a set of trips
@@ -19,6 +20,7 @@ export class App extends React.Component<any, any> {
 
     static TRIP_INDEX_PAGE = 'trip-index'
     static TRIP_PAGE = 'trip'
+    static NEW_TRIP_PAGE = 'new-trip'
 
     constructor(props) {
         super(props)
@@ -30,19 +32,35 @@ export class App extends React.Component<any, any> {
 
     render() {
         if (this.state.page === App.TRIP_INDEX_PAGE) {
-            return <TripIndex db={this.state.db} viewTrip={this.viewTrip.bind(this)}/>
+            return <TripIndex
+                db={this.state.db}
+                viewTrip={this.viewTrip.bind(this)}
+                viewNewTrip={this.viewNewTrip.bind(this)}
+            />
         } else if (this.state.page === App.TRIP_PAGE) {
             return <TripView
                 db={this.state.db}
                 trip={this.state.trip}
-                goBack={this.showIndex.bind(this)}
+                goBack={this.viewIndex.bind(this)}
+            />
+        } else if (this.state.page === App.NEW_TRIP_PAGE) {
+            return <NewTripView
+                db={this.state.db}
+                viewTrip={this.viewTrip.bind(this)}
+                goBack={this.viewIndex.bind(this)}
             />
         }
     }
 
-    showIndex() {
+    viewIndex() {
         this.setState({
             page: App.TRIP_INDEX_PAGE
+        })
+    }
+
+    viewNewTrip() {
+        this.setState({
+            page: App.NEW_TRIP_PAGE,
         })
     }
 

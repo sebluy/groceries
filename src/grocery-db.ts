@@ -33,7 +33,11 @@ export class GroceryDb {
     }
 
     putTrip(trip: Trip): Promise<number> {
-        return this.db.trips.put(trip)
+        return this.db.trips.put(trip).then(id => trip.id = id)
+    }
+
+    deleteTrip(trip: Trip): Promise<undefined> {
+        return this.db.trips.delete(trip.id)
     }
 
 }

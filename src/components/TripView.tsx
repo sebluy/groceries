@@ -21,9 +21,7 @@ export class TripView extends React.Component<any, any> {
             trip.items.push(new Item)
         }
         this.forceUpdate()
-        this.props.db.putTrip(trip).then(id => {
-            trip.id = id
-        })
+        this.props.db.putTrip(trip)
     }
 
     render() {
@@ -55,6 +53,7 @@ export class TripView extends React.Component<any, any> {
                     </tbody>
                 </table>
                 <button onClick={this.analyze.bind(this)}>Analyze</button>
+                <button onClick={this.delete.bind(this)}>Delete</button>
                 {this.state.analysis ? <AnalysisTable {...this.state.analysis}/> : ''}
             </div>
         )
@@ -122,6 +121,10 @@ export class TripView extends React.Component<any, any> {
     async analyze() {
         let analysis = await Analysis.analyzeTrip(this.props.db, this.props.trip)
         this.setState({analysis})
+    }
+
+    delete() {
+        this.props.db.deleteTrip(this.props.trip).then(this.props.goBack)
     }
 
 }
