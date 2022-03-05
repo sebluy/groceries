@@ -7,8 +7,10 @@ import { GroceryDb } from '../grocery-db'
 import { NewTripView } from './NewTripView'
 
 /*
- TODO: Add a analysis button on trip index to analyze a set of trips
- TODO: Add a foods page to select previous foods to initialize new trips
+ TODO: Add dynamic grid for analyzing trips: function of foods, nutrients, and measure
+ TODO: Add more classes (for example, amount: number & unit)
+ TODO: Allow custom selection of trips for selection.
+ TODO: Import/export database button
  TODO: Use react-router for page navigation
  TODO: Add more types
  TODO: Improve styling

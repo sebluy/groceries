@@ -1,33 +1,44 @@
 
 export class Food {
 
-    public static RDI = {
-        calories: 2000,
-        fat: 78,
-        protein: 50,
-        carbohydrate: 275,
-    }
+    public static CALORIES = 'Calories'
+    public static CARBOHYDRATE = 'Carbohydrate'
+    public static PROTEIN = 'Protein'
+    public static FAT = 'Fat'
+    public static IRON = 'Iron'
+    public static ZINC = 'Zinc'
+    public static CALCIUM = 'Calcium'
+    public static OMEGA3 = 'Omega-3'
+
+    public static RDI = new Map([
+        [Food.CALORIES, 2000],
+        [Food.CARBOHYDRATE, 275],
+        [Food.PROTEIN, 50],
+        [Food.FAT, 78],
+        [Food.IRON, 18],
+        [Food.ZINC, 11],
+        [Food.CALCIUM, 1300],
+        [Food.OMEGA3, 1.6],
+    ])
 
     public id: number
     public amount: any
     public description: string
-    public calories: number
-    public carbohydrate: number
-    public protein: number
-    public fat: number
+    public nutrients: Map<string, number>
 
     constructor(o) {
         Object.assign(this, o)
+    }
+
+    static nutrientNames() {
+        return Array.from(Food.RDI.keys())
     }
 
     static empty(description) {
         return new Food({
             description,
             amount: {raw: '0 kg', number: 0, unit: 'kg'},
-            calories: 0,
-            carbohydrate: 0,
-            protein: 0,
-            fat: 0,
+            nutrients: new Map(Food.nutrientNames().map(name => [name, 0])),
         })
     }
 
@@ -42,11 +53,32 @@ export class Food {
             id: this.id,
             description: this.description,
             amount: amount,
-            calories: this.calories + f2.calories,
-            carbohydrate: this.carbohydrate + f2.carbohydrate,
-            fat: this.fat + f2.fat,
-            protein: this.protein + f2.protein,
+            nutrients: this.addNutrients(this.nutrients, f2.nutrients)
         })
+    }
+
+    addNutrients(n1: Map<string, number>, n2: Map<string, number>) {
+        let n3 = new Map()
+        n1.forEach((v, k) => {
+            n3.set(k, v + n2.get(k))
+        })
+        return n3
+    }
+
+    divideNutrients(n1: Map<string, number>, n2: Map<string, number>) {
+        let n3 = new Map()
+        n1.forEach((v, k) => {
+            n3.set(k, v / n2.get(k))
+        })
+        return n3
+    }
+
+    scaleNutrients(n1: Map<string, number>, f: number) {
+        let n3 = new Map()
+        n1.forEach((v, k) => {
+            n3.set(k, v * f)
+        })
+        return n3
     }
 
     toRDI() {
@@ -54,10 +86,7 @@ export class Food {
             id: this.id,
             description: this.description,
             amount: this.amount,
-            calories: this.calories / Food.RDI.calories,
-            fat: this.fat / Food.RDI.fat,
-            carbohydrate: this.carbohydrate / Food.RDI.carbohydrate,
-            protein: this.protein / Food.RDI.protein,
+            nutrients: this.divideNutrients(this.nutrients, Food.RDI)
         })
     }
 
@@ -69,10 +98,7 @@ export class Food {
             id: this.id,
             description: this.description,
             amount: {...amount2},
-            calories: this.calories * factor,
-            fat: this.fat * factor,
-            carbohydrate: this.carbohydrate * factor,
-            protein: this.protein * factor,
+            nutrients: this.scaleNutrients(this.nutrients, factor)
         })
     }
 
@@ -81,10 +107,7 @@ export class Food {
             id: this.id,
             description: this.description,
             amount: this.amount,
-            calories: this.calories * factor,
-            fat: this.fat * factor,
-            carbohydrate: this.carbohydrate * factor,
-            protein: this.protein * factor,
+            nutrients: this.scaleNutrients(this.nutrients, factor)
         })
     }
 
