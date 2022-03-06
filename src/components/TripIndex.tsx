@@ -49,7 +49,7 @@ export class TripIndex extends React.Component<any, any> {
                     onClick={this.analyzeMultiple.bind(this)}>
                     Analyze Multiple
                 </button>
-                {this.state.analysis ? <AnalysisTable {...this.state.analysis}/> : ''}
+                {this.state.analysis ? <AnalysisTable analysis={this.state.analysis}/> : ''}
             </div>
         )
     }

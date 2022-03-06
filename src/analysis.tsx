@@ -3,88 +3,94 @@ import { Trip } from './trip'
 import { Food } from './food'
 import { GroceryDb } from './grocery-db'
 
+interface Measure {
+    foods: Map<string, Food>
+    total: Food
+}
+
 export class Analysis {
 
-    API_KEY: string = 'XJhL3a6dKg1b8xMzv5KA9GcuLLxmjeXFLfehyGbO'
-    db: GroceryDb
-    raw: Array<Food>
-    rdi: Array<Food>
-    rdiPerDay: Array<Food>
-    nutrients: any
+    public foods: Map<string, Food>
+    public measures: Map<string, Measure>
+
+    private static API_KEY: string = 'XJhL3a6dKg1b8xMzv5KA9GcuLLxmjeXFLfehyGbO'
+    private db: GroceryDb
 
     constructor(db) {
         this.db = db
     }
 
-    static async analyzeTrip(db: GroceryDb, trip: Trip) {
-        let analysis = new Analysis(db)
-        return analysis.generateAnalysis(await analysis.extractFoods(trip))
-    }
-
     static async analyzeTrips(db: GroceryDb, trips: Array<Trip>) {
         let analysis = new Analysis(db)
-        let ps = trips.map(trip => analysis.extractFoods(trip))
-        let tripFoods = await Promise.all(ps)
-        let foods = analysis.mergeFoods(tripFoods)
-        return analysis.generateAnalysis(foods)
+        await analysis.extractFoods(trips)
+        return analysis.generateAnalysis()
     }
 
-    mergeFoods(tripFoods: Array<Array<Food>>): Array<Food> {
-        let foodMap = new Map<number, Food>()
+    mergeFoods(tripFoods: Array<Array<Food>>): Map<string, Food> {
+        let foodMap = new Map<string, Food>()
         tripFoods.forEach(foods => {
             foods.forEach(food => {
-                if (foodMap.has(food.id)) {
-                    let existing = foodMap.get(food.id)
+                if (foodMap.has(food.description)) {
+                    let existing = foodMap.get(food.description)
                     let merged = existing.add(food)
-                    foodMap.set(food.id, merged)
+                    foodMap.set(food.description, merged)
                 } else {
-                    foodMap.set(food.id, food)
+                    foodMap.set(food.description, food)
                 }
             })
         })
-        return Array.from(foodMap.values())
+        return foodMap
     }
 
-    async extractFoods(trip: Trip): Promise<Array<Food>> {
-        let items = trip.items
-        items = items.filter(item => item.valid())
-        let promises = items.map(async (row) => {
-            let food = await this.lookupFood(row.food.value)
-            return food.scale(row.amount)
+    async extractFoods(trips: Array<Trip>): Promise<void> {
+        let ps = trips.map(async (trip) => {
+            let items = trip.items
+            items = items.filter(item => item.valid())
+            let promises = items.map(async (row) => {
+                let food = await this.lookupFood(row.food.value)
+                return food.scale(row.amount)
+            })
+            return await Promise.all(promises)
         })
-        return await Promise.all(promises)
+        let tripFoods = await Promise.all(ps)
+        this.foods = this.mergeFoods(tripFoods)
     }
 
-    generateAnalysis(foods: Array<Food>) {
-        this.raw = []
-        this.rdi = []
-        this.rdiPerDay = []
+    generateAnalysis() {
+        let raw = new Map()
+        let rdi = new Map()
+        let rdiPerDay = new Map()
         let rawTotal = Food.empty('Total')
         let rdiTotal = Food.empty('Total')
         let rdiPerDayTotal = Food.empty('Total')
-        foods.forEach(food => {
-            this.raw.push(food)
+        this.foods.forEach(food => {
+            raw.set(food.description, food)
             rawTotal = rawTotal.add(food)
 
             let foodRDI = food.toRDI()
-            this.rdi.push(foodRDI)
+            rdi.set(food.description, foodRDI)
             rdiTotal = rdiTotal.add(foodRDI)
         })
 
-        foods.forEach(food => {
+        this.foods.forEach(food => {
             let foodRDI = food.toRDI()
             let foodRDIPerDay = foodRDI.scaleByFactor(1 / rdiTotal.nutrients.get(Food.CALORIES))
-            this.rdiPerDay.push(foodRDIPerDay)
+            rdiPerDay.set(food.description, foodRDIPerDay)
             rdiPerDayTotal = rdiPerDayTotal.add(foodRDIPerDay)
         })
-        this.raw.push(rawTotal)
-        this.rdi.push(rdiTotal)
-        this.rdiPerDay.push(rdiPerDayTotal)
-        this.nutrients = {
-            raw: rawTotal,
-            rdi: rdiTotal,
-            rdiPerDay: rdiPerDayTotal
-        }
+        this.measures = new Map()
+        this.measures.set(Food.MEASURES.RAW, {
+            foods: raw,
+            total: rawTotal,
+        })
+        this.measures.set(Food.MEASURES.RDI, {
+            foods: rdi,
+            total: rdiTotal,
+        })
+        this.measures.set(Food.MEASURES.RDI_PER_DAY, {
+            foods: rdiPerDay,
+            total: rdiPerDayTotal
+        })
         return this
     }
 
@@ -100,7 +106,7 @@ export class Analysis {
     }
 
     fetchFood(id): Promise<Food> {
-        let url = `https://api.nal.usda.gov/fdc/v1/food/${id}?api_key=${this.API_KEY}`
+        let url = `https://api.nal.usda.gov/fdc/v1/food/${id}?api_key=${Analysis.API_KEY}`
         return fetch(url)
             .then(response => response.json())
             .then(data => {

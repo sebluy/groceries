@@ -54,7 +54,7 @@ export class TripView extends React.Component<any, any> {
                 </table>
                 <button onClick={this.analyze.bind(this)}>Analyze</button>
                 <button onClick={this.delete.bind(this)}>Delete</button>
-                {this.state.analysis ? <AnalysisTable {...this.state.analysis}/> : ''}
+                {this.state.analysis ? <AnalysisTable analysis={this.state.analysis}/> : ''}
             </div>
         )
     }
@@ -119,7 +119,7 @@ export class TripView extends React.Component<any, any> {
     }
 
     async analyze() {
-        let analysis = await Analysis.analyzeTrip(this.props.db, this.props.trip)
+        let analysis = await Analysis.analyzeTrips(this.props.db, [this.props.trip])
         this.setState({analysis})
     }
 
