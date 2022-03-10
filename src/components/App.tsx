@@ -8,8 +8,6 @@ import { NewTripView } from './NewTripView'
 
 /*
  TODO: Add more nutrients.
- TODO: Allow sort of nutrient table.
- TODO: Add dynamic table for analyzing trips: function of foods, nutrients, and measure
  TODO: Add units to analysis table.
  TODO: Add more classes (for example, amount: number & unit)
  TODO: Allow custom selection of trips for selection.

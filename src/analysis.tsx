@@ -134,6 +134,41 @@ export class Analysis {
                         [Food.IRON, nutrients.get('Iron, Fe') || 0],
                         [Food.OMEGA3, omega3],
                         [Food.CALCIUM, nutrients.get('Calcium, Ca') || 0],
+                        [Food.SATURATED_FAT, nutrients.get('Fatty acids, total saturated') || 0],
+                        [Food.CHOLESTEROL, nutrients.get('Cholesterol') || 0],
+                        [Food.SODIUM, nutrients.get('Sodium, Na') || 0],
+                        [Food.ADDED_SUGAR, nutrients.get('Added Sugar') || 0], // TODO
+                        [Food.FIBER, nutrients.get('Fiber, total dietary') || 0],
+                        [Food.VITAMIN_A, nutrients.get('Vitamin A, RAE') || 0],
+                        [Food.VITAMIN_C, nutrients.get('Vitamin C, total ascorbic acid') || 0],
+                        [Food.VITAMIN_D, nutrients.get('Vitamin D (D2 + D3)') || 0],
+                        [Food.VITAMIN_E,
+                            (nutrients.get('Vitamin E (alpha-tocopherol)') || 0) +
+                            (nutrients.get('Vitamin E, added') || 0)
+                        ],
+                        [Food.VITAMIN_K, nutrients.get('Vitamin K (phylloquinone)') || 0],
+                        [Food.THIAMIN, nutrients.get('Thiamin') || 0],
+                        [Food.RIBOFLAVIN, nutrients.get('Riboflavin') || 0],
+                        [Food.NIACIN, nutrients.get('Niacin') || 0],
+                        [Food.PANTOTHENIC_ACID, nutrients.get('Pantothenic acid') || 0],
+                        [Food.PYRIDOXINE, nutrients.get('Vitamin B-6') || 0],
+                        [Food.BIOTINE, nutrients.get('Vitamin B-7') || 0],
+                        [Food.FOLATE, nutrients.get('Folate, total') || 0],
+                        [Food.VITAMIN_B12,
+                            (nutrients.get('Vitamin B-12') || 0) +
+                            (nutrients.get('Vitamin B-12, added') || 0)
+                        ],
+                        [Food.CHOLINE, nutrients.get('Choline, total') || 0],
+                        [Food.COPPER, nutrients.get('Copper, Cu') || 0],
+                        [Food.MAGNESIUM, nutrients.get('Magnesium, Mg') || 0],
+                        [Food.MANGANESE, nutrients.get('Manganese, Mn') || 0],
+                        [Food.PHOSPHORUS, nutrients.get('Phosphorus, P') || 0],
+                        [Food.SELENIUM, nutrients.get('Selenium, Se') || 0],
+                        [Food.POTASSIUM, nutrients.get('Potassium, K') || 0],
+                        [Food.MOLYBDENUM, nutrients.get('Molybdenum') || 0], // TODO
+                        [Food.IODINE, nutrients.get('Iodine') || 0], // TODO
+                        [Food.CHROMIUM, nutrients.get('Chromium') || 0], // TODO
+                        [Food.CHLORIDE, nutrients.get('Chloride') || 0], // TODO
                     ]),
                 })
             })

@@ -33,7 +33,7 @@ export function ReactTable({data, columns, hasFooter=false}) {
                         </tr>
                 )})}
             </tbody>
-            {hasFooter ? (
+            {hasFooter && (
                 <tfoot>
                     {footerGroups.map(group => (
                         <tr {...group.getFooterGroupProps()}>
@@ -43,7 +43,7 @@ export function ReactTable({data, columns, hasFooter=false}) {
                         </tr>
                     ))}
                 </tfoot>
-            ) : ''}
+            )}
         </table>
     )
 }

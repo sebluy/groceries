@@ -112,6 +112,7 @@ export class AnalysisTable extends React.Component<Props, State> {
                 id: measure,
                 accessor: nutrient => nutrients.get(nutrient),
                 Cell: props => props.value.toLocaleString(),
+                sortType: 'number',
             })
         })
         return <ReactTable data={Food.nutrientNames()} columns={columns}/>

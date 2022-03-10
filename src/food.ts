@@ -9,15 +9,78 @@ export class Food {
     public static ZINC = 'Zinc'
     public static CALCIUM = 'Calcium'
     public static OMEGA3 = 'Omega-3'
+    public static SATURATED_FAT = 'Saturated Fat'
+    public static CHOLESTEROL = 'Cholesterol'
+    public static SODIUM = 'Sodium'
+    public static ADDED_SUGAR = 'Added Sugar'
+    public static FIBER = 'Fiber'
+    public static VITAMIN_A = 'Vitamin A'
+    public static VITAMIN_C = 'Vitamin C'
+    public static VITAMIN_D = 'Vitamin D'
+    public static VITAMIN_E = 'Vitamin E'
+    public static VITAMIN_K = 'Vitamin K'
+    public static THIAMIN = 'Thiamin'
+    public static RIBOFLAVIN = 'Riboflavin'
+    public static NIACIN = 'Niacin'
+    public static PANTOTHENIC_ACID = 'Pantothenic Acid'
+    public static PYRIDOXINE = 'Pyridoxine'
+    public static BIOTINE = 'Biotine'
+    public static FOLATE = 'Folate'
+    public static VITAMIN_B12 = 'Vitamin B12'
+    public static CHOLINE = 'Choline'
+    public static CHROMIUM = 'Chromium'
+    public static COPPER = 'Copper'
+    public static IODINE = 'Iodine'
+    public static MAGNESIUM = 'Magnesium'
+    public static MANGANESE = 'Manganese'
+    public static MOLYBDENUM = 'Molybdenum'
+    public static PHOSPHORUS = 'Phosphorus'
+    public static SELENIUM = 'Selenium'
+    public static POTASSIUM = 'Potassium'
+    public static CHLORIDE = 'Chloride'
 
+    // Source: https://en.wikipedia.org/wiki/Reference_Daily_Intake
     public static RDI = new Map([
+        // Macro
         [Food.CALORIES, 2000],
-        [Food.CARBOHYDRATE, 275],
-        [Food.PROTEIN, 50],
         [Food.FAT, 78],
-        [Food.IRON, 18],
-        [Food.ZINC, 11],
+        [Food.SATURATED_FAT, 20],
+        [Food.CHOLESTEROL, 300],
+        [Food.CARBOHYDRATE, 275],
+        // [Food.ADDED_SUGAR, 50],
+        [Food.FIBER, 28],
+        [Food.PROTEIN, 50],
+        // Vitamins
+        [Food.VITAMIN_A, 900],
+        [Food.VITAMIN_C, 90],
+        [Food.VITAMIN_D, 20],
+        [Food.VITAMIN_E, 15],
+        [Food.VITAMIN_K, 120],
+        [Food.THIAMIN, 1.2],
+        [Food.RIBOFLAVIN, 1.3],
+        [Food.NIACIN, 16],
+        [Food.PANTOTHENIC_ACID, 5],
+        [Food.PYRIDOXINE, 1.7],
+        // [Food.BIOTINE, 30],
+        [Food.FOLATE, 400],
+        [Food.VITAMIN_B12, 2.4],
+        [Food.CHOLINE, 550],
+        // Minerals
         [Food.CALCIUM, 1300],
+        // [Food.CHROMIUM, 35],
+        [Food.COPPER, 0.9],
+        // [Food.IODINE, 150],
+        [Food.IRON, 18],
+        [Food.MAGNESIUM, 420],
+        [Food.MANGANESE, 2.3],
+        // [Food.MOLYBDENUM, 45],
+        [Food.PHOSPHORUS, 1250],
+        [Food.SELENIUM, 55],
+        [Food.ZINC, 11],
+        [Food.POTASSIUM, 4700],
+        [Food.SODIUM, 2300],
+        // [Food.CHLORIDE, 2.3],
+        // Other
         [Food.OMEGA3, 1.6],
     ])
 
