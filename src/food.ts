@@ -22,7 +22,7 @@ export class Food {
     ])
 
     public static CORE_NUTRIENTS = [Food.CALORIES, Food.CARBOHYDRATE, Food.PROTEIN, Food.FAT]
-    public static MEASURES = {RDI: 'RDI', RAW: 'Raw', RDI_PER_DAY: 'RDI/Day'}
+    public static MEASURES = {RAW: 'Raw', RDI: 'RDI', RDI_PER_DAY: 'RDI/Day'}
 
     public id: number
     public amount: any

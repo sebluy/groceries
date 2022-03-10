@@ -76,7 +76,7 @@ export class AnalysisTable extends React.Component<Props, State> {
             })
         })
 
-        return <ReactTable data={measureO.foods} columns={columns}/>
+        return <ReactTable data={measureO.foods} columns={columns} hasFooter={true}/>
     }
 
     renderControls() {
@@ -99,34 +99,22 @@ export class AnalysisTable extends React.Component<Props, State> {
     }
 
     renderSummaryTable() {
-        let ff = f => f.toFixed(2)
-        let raw = this.props.analysis.measures.get(Food.MEASURES.RAW).total.nutrients
-        let rdi = this.props.analysis.measures.get(Food.MEASURES.RDI).total.nutrients
-        let rdiPerDay = this.props.analysis.measures.get(Food.MEASURES.RDI_PER_DAY).total.nutrients
-        return (
-            <table>
-                <thead>
-                <tr>
-                    <th>Nutrient</th>
-                    <th>{Food.MEASURES.RAW}</th>
-                    <th>{Food.MEASURES.RDI}</th>
-                    <th>{Food.MEASURES.RDI_PER_DAY}</th>
-                </tr>
-                </thead>
-                <tbody>
-                    {Food.nutrientNames().map(nutrient => {
-                        return (
-                            <tr key={nutrient}>
-                                <td>{nutrient}</td>
-                                <td>{ff(raw.get(nutrient))}</td>
-                                <td>{ff(rdi.get(nutrient))}</td>
-                                <td>{ff(rdiPerDay.get(nutrient))}</td>
-                            </tr>
-                        )
-                    })}
-                </tbody>
-            </table>
-        )
+        let measures = this.props.analysis.measures
+        let columns: any = [{
+            Header: 'Nutrient',
+            id: 'Nutrient',
+            accessor: nutrient => nutrient,
+        }]
+        Object.values(Food.MEASURES).forEach(measure => {
+            let nutrients = measures.get(measure).total.nutrients
+            columns.push({
+                Header: measure,
+                id: measure,
+                accessor: nutrient => nutrients.get(nutrient),
+                Cell: props => props.value.toLocaleString(),
+            })
+        })
+        return <ReactTable data={Food.nutrientNames()} columns={columns}/>
     }
 
 }

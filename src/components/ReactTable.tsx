@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useTable, useSortBy } from 'react-table'
 
-export function ReactTable({data, columns}) {
+export function ReactTable({data, columns, hasFooter=false}) {
 
     const { getTableProps, getTableBodyProps, headerGroups, footerGroups, rows, prepareRow } =
         useTable({data, columns}, useSortBy)
@@ -33,15 +33,17 @@ export function ReactTable({data, columns}) {
                         </tr>
                 )})}
             </tbody>
-            <tfoot>
-                {footerGroups.map(group => (
-                    <tr {...group.getFooterGroupProps()}>
-                        {group.headers.map(column => (
-                            <td {...column.getFooterProps()}>{column.render('Footer')}</td>
-                        ))}
-                    </tr>
-                ))}
-            </tfoot>
+            {hasFooter ? (
+                <tfoot>
+                    {footerGroups.map(group => (
+                        <tr {...group.getFooterGroupProps()}>
+                            {group.headers.map(column => (
+                                <td {...column.getFooterProps()}>{column.render('Footer')}</td>
+                            ))}
+                        </tr>
+                    ))}
+                </tfoot>
+            ) : ''}
         </table>
     )
 }
