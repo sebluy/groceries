@@ -1,7 +1,9 @@
 import * as React from 'react'
 import { Food } from '../food'
 import Select, { MultiValue } from 'react-select'
-import { Analysis } from '../analysis';
+import { ReactTable } from './ReactTable'
+import { Analysis } from '../analysis'
+
 
 interface Props {
     analysis: Analysis
@@ -14,7 +16,6 @@ interface Option {
 
 interface State {
     nutrients: MultiValue<Option>,
-    foods: MultiValue<Option>,
     measure: Option,
 }
 
@@ -22,11 +23,9 @@ export class AnalysisTable extends React.Component<Props, State> {
 
     constructor(props) {
         super(props)
-        let foods = Array.from(this.props.analysis.foods.keys())
         let measures = this.createOptions(Object.values(Food.MEASURES))
         this.state = {
             nutrients: this.createOptions(Food.CORE_NUTRIENTS),
-            foods: this.createOptions(foods),
             measure: measures[2],
         }
     }
@@ -44,13 +43,43 @@ export class AnalysisTable extends React.Component<Props, State> {
                 {this.renderSummaryTable()}
                 <h2>Analysis</h2>
                 {this.renderControls()}
-                {this.renderTable()}
+                {this.renderMainTable()}
             </div>
         )
     }
 
+    renderMainTable() {
+        let measure = this.state.measure.value
+        if (measure === undefined) return
+        let measureO = this.props.analysis.measures.get(measure)
+
+        let columns: any = [{
+            Header: 'Food',
+            id: 'Food',
+            accessor: food => food.description,
+            Footer: 'Total',
+        }, {
+            Header: 'Amount',
+            id: 'Amount',
+            accessor: food => food.amount.raw,
+            Footer: measureO.total.amount.raw
+        }]
+        this.state.nutrients.forEach(option => {
+            let nutrient = option.value
+            columns.push({
+                Header: nutrient,
+                accessor: food => food.nutrients.get(nutrient),
+                id: nutrient,
+                Cell: props => props.value.toLocaleString(),
+                sortType: 'number',
+                Footer: measureO.total.nutrients.get(nutrient).toLocaleString()
+            })
+        })
+
+        return <ReactTable data={measureO.foods} columns={columns}/>
+    }
+
     renderControls() {
-        let foods = Array.from(this.props.analysis.foods.keys())
         let measures = this.createOptions(Object.values(Food.MEASURES))
         return (
             <React.Fragment>
@@ -61,17 +90,10 @@ export class AnalysisTable extends React.Component<Props, State> {
                 isMulti
             />
             <Select
-                options={this.createOptions(foods)}
-                value={this.state.foods}
-                onChange={foods => this.setState({foods})}
-                isMulti
-            />
-            <Select
                 options={measures}
                 value={this.state.measure}
                 onChange={measure => this.setState({measure})}
             />
-            <button>Transpose</button>
             </React.Fragment>
         )
     }
@@ -102,51 +124,6 @@ export class AnalysisTable extends React.Component<Props, State> {
                             </tr>
                         )
                     })}
-                </tbody>
-            </table>
-        )
-    }
-
-    renderTable() {
-        let measure = this.state.measure.value
-        if (measure === undefined) return
-        let measureO = this.props.analysis.measures.get(measure)
-        let ff = f => f.toFixed(2)
-        return (
-            <table>
-                <thead>
-                    <tr>
-                        <th>Food</th>
-                        <th>Amount</th>
-                        {this.state.nutrients.map(nutrient => {
-                            return <th key={nutrient.value}>{nutrient.value}</th>
-                        })}
-                    </tr>
-                </thead>
-                <tbody>
-                    {this.state.foods.map(food => {
-                        let foodO = measureO.foods.get(food.value)
-                        return (
-                            <tr key={food.value}>
-                                <td>{food.value}</td>
-                                <td>{foodO.amount.raw}</td>
-                                {this.state.nutrients.map(nutrient => {
-                                    return <td key={nutrient.value}>
-                                        {ff(foodO.nutrients.get(nutrient.value))}
-                                    </td>
-                                })}
-                            </tr>
-                        )
-                    })}
-                    <tr>
-                        <td>Total</td>
-                        <td>{measureO.total.amount.raw}</td>
-                        {this.state.nutrients.map(nutrient => {
-                            return <td key={nutrient.value}>
-                                {ff(measureO.total.nutrients.get(nutrient.value))}
-                            </td>
-                        })}
-                    </tr>
                 </tbody>
             </table>
         )
