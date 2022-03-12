@@ -62,7 +62,7 @@ export class Analysis {
         let rdiPerDay = new Map()
         let rawTotal = Food.empty('Total')
         let rdiTotal = Food.empty('Total')
-        let rdiPerDayTotal = Food.empty('Total')
+        let dailyCalories = Food.RDI.get(Food.CALORIES)
         this.foods.forEach(food => {
             raw.set(food.description, food)
             rawTotal = rawTotal.add(food)
@@ -70,14 +70,15 @@ export class Analysis {
             let foodRDI = food.toRDI()
             rdi.set(food.description, foodRDI)
             rdiTotal = rdiTotal.add(foodRDI)
+
+            let calories = food.nutrients.get(Food.CALORIES)
+            let factor = calories === 0 ? 0 : dailyCalories / calories
+            let foodRDIPerDay = foodRDI.scaleByFactor(factor)
+            rdiPerDay.set(food.description, foodRDIPerDay)
         })
 
-        this.foods.forEach(food => {
-            let foodRDI = food.toRDI()
-            let foodRDIPerDay = foodRDI.scaleByFactor(1 / rdiTotal.nutrients.get(Food.CALORIES))
-            rdiPerDay.set(food.description, foodRDIPerDay)
-            rdiPerDayTotal = rdiPerDayTotal.add(foodRDIPerDay)
-        })
+        let rdiPerDayTotal = rdiTotal.scaleByFactor(1 / rdiTotal.nutrients.get(Food.CALORIES))
+
         this.measures = new Map()
         this.measures.set(Food.MEASURES.RAW, {
             foods: raw,
@@ -87,7 +88,7 @@ export class Analysis {
             foods: rdi,
             total: rdiTotal,
         })
-        this.measures.set(Food.MEASURES.RDI_PER_DAY, {
+        this.measures.set(Food.MEASURES.RDI_PER_2000, {
             foods: rdiPerDay,
             total: rdiPerDayTotal
         })
@@ -126,7 +127,9 @@ export class Analysis {
                     description: data.description,
                     amount: {raw: '100 g', number: 100, unit: 'g'},
                     nutrients: new Map([
-                        [Food.CALORIES, nutrients.get('Energy') || 0],
+                        [Food.CALORIES,
+                            nutrients.get('Energy') ||
+                            nutrients.get('Energy (Atwater Specific Factors)') || 0],
                         [Food.CARBOHYDRATE, nutrients.get('Carbohydrate, by difference') || 0],
                         [Food.PROTEIN, nutrients.get('Protein') || 0],
                         [Food.FAT, nutrients.get('Total lipid (fat)') || 0],

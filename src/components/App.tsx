@@ -7,6 +7,8 @@ import { GroceryDb } from '../grocery-db'
 import { NewTripView } from './NewTripView'
 
 /*
+ TODO: Add a %DRI/ 2000 Calorie for individual foods option
+ TODO: Add a %DRI/$
  TODO: Add more nutrients.
  TODO: Add units to analysis table.
  TODO: Add more classes (for example, amount: number & unit)
